@@ -1,132 +1,233 @@
 from Livre import Livre
 from Magazine import Magazine
 from Adherent import Adherant
+from bd import get_connection
 
 class Bibliothecaire:
     def __init__(self):
         self. documents = []
         self.liste_adherants = []
         
+    @staticmethod
+    def ajouter_document(document):
+        try:
+            connection = get_connection()
+            cusor = connection.cursor()
+
+            query = "insert into documents (titre, auteur, date_publication, genre, type) values (%s, %s, %s, %s, %s)"
+            cusor.execute(query, (document.titre, document.auteur, document.date_publication, document.genre, document.type))
+            connection.commit()
+            print("document ajouter avec succes")
+        except Exception as e:
+            print("Erreur lors de l'ajout d'un document :", e)
+            
+        finally:
+            cusor.close()
+            connection.close()
     
-    def ajouter_livre(self, titre, auteur, date_publication, genre):
-        livre = Livre(titre, auteur, date_publication, genre)
+    @staticmethod
+    def InscrireMembre(adherent):
+        try:
+            connection = get_connection()
+            Cursor = connection.cursor()
 
-        self.documents.append(livre)
-        print("Livre ajouter avec succes")
+            query = "insert into adherents (nom, prenom) values (%s, %s)"
+            Cursor.execute(query, (adherent.nom, adherent.prenom))
+            connection.commit()
+            print("Adharent ajouter avec succes")
+        except Exception as e:
+            print("Erreur lors de l'ajout de l'adherent :", e)
 
-    def ajouter_magazine(self, titre, auteur, date_publication, periodiciter):
-        magazine = Magazine(titre, auteur, date_publication, periodiciter)
-
-        self.documents.append(magazine)
-        print("Livre ajouter avec succes")
-
-
-
-    def InscrireMembre(self,nom):
-        adherant= Adherant(nom)
-
-        self.liste_adherants.append(adherant)
-        print("Membre ajoute")
+        finally:
+            Cursor.close()
+            connection.close()
+        
 
 
-    def Lister_document(self):
-        if self.documents==[]:
-            print("La liste est vide")
-        else:
-            print("--------------------- La liste des Documents ----------------------")
-            for document in self.documents:
-                print(document)  
 
-    def Lister_Emprunt(self,nom_adherant):
-        adherant_trouver=None
-        if self.liste_adherants==[]:
-            print("la liste est vide")
-        else:
-            for adherant in self.liste_adherants:
-                if adherant.nom==nom_adherant:
-                    adherant_trouver=adherant
+    @staticmethod
+    def Lister_document():
+        try:
+            connection = get_connection()
+            cursor = connection.cursor(dictionary=True)
 
-            if adherant_trouver==None:
-                print("cette membre n'existe pas") 
-                return 
+            query = "select * from documents"
+            cursor.execute(query)
+            for document in cursor.fetchall():
+                if document["disponible"] == 1:
+                    statut = 'disponible'
+                else:
+                    statut = "emprunter"
+                print(f"id_document : {document["id"]}, Titre :{document["titre"]}, auteur : {document["auteur"]}, type : {document["type"]}, statut : {statut}")
+        except Exception as e:
+            print("Erreur lors de l'affichage :",e)
 
-            if adherant_trouver.listeEmprunts==[]: 
-                print(f"{adherant_trouver.nom} n'a pas encore emprunter de documents ")
-            else:
-                print(f"------------------Liste des documents emprunter par {adherant_trouver.nom} ---------------------")    
-                for i in adherant_trouver.listeEmprunts:
-                    print(i)  
+        finally:
+            cursor.close()
+            connection.close()
 
+
+    def Lister_Emprunt(self,id_adherent):
+        try:
+            connection = get_connection()
+            cursor = connection.cursor(dictionary=True)
+
+            query = "select * from adherents where id = %s"
+            cursor.execute(query, (id_adherent,))
+
+            adherant = cursor.fetchone()
+
+            if adherant is None:
+                print("Adherent introuvable")
+                return
+            
+            sql = "select a.prenom, a.nom, d.titre from emprunts e inner join adherents a on e.id_adherent = a.id inner join documents d on e.id_document = d.id where id_adherent = %s and e.etat = 'emprunter'"
+            cursor.execute(sql, (id_adherent,))
+            emprunt = cursor.fetchall()
+            if emprunt == []:
+                print("La liste des emprunts est vide")
+            for e in emprunt:
+                print(f"Prenom : {e["prenom"]}, nom : {e["nom"]} -> {e["titre"]}")
+        except Exception as e:
+            print(e)
+            
+
+     
    
 
-        
-    def Lister_membres(self):
-        if self.liste_adherants==[]:
-            print("La liste des membres est vide")
-        else:
-            for membre in self.liste_adherants:
-                print(membre)                
+    @staticmethod
+    def Lister_membres():
+        try:
+            connection = get_connection()
+            cursor = connection.cursor(dictionary=True)
 
-    def valider_pret(self, nom_membre, titre_document):
+            query = "select * from adherents"
+            cursor.execute(query)
+            for adherent in cursor.fetchall():
+                print(f"id_adherent : {adherent["id"]}, nom : {adherent["nom"]}, prenom : {adherent["prenom"]}")
+        except Exception as e:
+            print("Erreur lors de l'affichage des adherent :",e)
 
-        document_trouvee = None
-        for i in self.documents:
-            if i.titre == titre_document:
-                document_trouvee = i
+        finally:
+            cursor.close()
+            connection.close()              
 
-        membre_trouvee = None
-        for m in self.liste_adherants:
-            if m.nom == nom_membre:
-                membre_trouvee =  m
+    @staticmethod
+    def valider_pret(id_adherent, id_document, date_prevu):
+        try:
 
-        if document_trouvee==None and membre_trouvee==None:
-            print("livre et membre non existant")
-            return
-        
-        if membre_trouvee is None:
-            print("Membre introuvable")
-            return
-        else:
-            if document_trouvee is None:
+            connection = get_connection()
+            cursor = connection.cursor(dictionary=True)
+
+            query = "select * from documents where id = %s"
+            cursor.execute(query, (id_document,))
+
+            document = cursor.fetchone()
+
+            if document is None:
                 print("Document introuvable")
                 return
-            else:
-        
-                resultat = document_trouvee.Emprunt()
-                    
-                if resultat:
-                    membre_trouvee.listeEmprunts.append(document_trouvee)
-                    print("Pret validé avec succès.")
+            
+            
+            query = "select * from adherents where id = %s"
+            cursor.execute(query, (id_adherent,))
 
+            adherant = cursor.fetchone()
 
-    def Retourner_document(self, nom_membre, titre_document):
+            if adherant is None:
+                print("Adherent introuvable")
+                return
+            
+            if document['type'] == 'livre':
+                livre = Livre(document['titre'], document['auteur'], document['date_publication'], document['genre'], document['type'])
+                if livre.Emprunt():
+                        
+                    query = "insert into emprunts (id_document, id_adherent, date_prevu) values (%s, %s, %s)"
+                    cursor.execute(query, (document["id"], adherant["id"], date_prevu))
+                    sql = "update documents set disponible = %s where id = %s"
+                    cursor.execute(sql, (livre.disponible, document['id']))
+                    connection.commit()
 
-        document_trouvee = None
-        for i in self.documents:
-            if i.titre == titre_document:
-                document_trouvee = i
-                print(f"Document trouver {i}")
+            if document['type'] == 'magazine':
+                magazine = Magazine(document["titre"], document["auteur"], document["date_publication"], document["genre"], document["type"])
+                if magazine.Emprunt():
+                        
+                    query = "insert into emprunts (id_document, id_adherent, date_prevu) values (%s, %s, %s)"
+                    cursor.execute(query, (document['id'], adherant['id'], date_prevu))
+                    sql = "update documents set disponible = %s where id = %s"
+                    cursor.execute(sql, (magazine.disponible, document['id']))
+                    connection.commit()
+            print("L'emprunt a ete effectuer avec succes")
+        except Exception as e:
+            print("Erreur lors de la validation du pret:", e)
 
-        membre_trouvee = None
-        for m in self.liste_adherants:
-            if m.nom == nom_membre:
-                membre_trouvee =  m
+        finally:
+            cursor.close()
+            connection.close()
+    
+  
+    
+    @staticmethod
+    def Retourner_document(id_document, id_adherent, date_prevu):
+        try:
 
-        if document_trouvee==None and membre_trouvee==None:
-            print("livre et membre non existant")
-            return
-        
-        if membre_trouvee is None:
-            print("Membre introuvable")
-            return
-        else:
-            if document_trouvee is None:
+            connection = get_connection()
+            cusor = connection.cursor(dictionary=True)
+
+            query = "select * from documents where id = %s"
+            cusor.execute(query, (id_document,))
+            document = cusor.fetchone()
+            print(document)
+
+            if document is None:
                 print("Document introuvable")
                 return
-            else:
+            
 
-                resultat = document_trouvee.Retour()
+            query = "select * from adherents where id = %s"
+            cusor.execute(query, (id_adherent,))
+            adherent = cusor.fetchone()
+
+            if adherent is None:
+                print("Adherent introuvable")
+                return
+
+            
+            if document['type'] == 'livre':
+                livre = Livre(document['titre'], document['auteur'], document['date_publication'], document['genre'], document['type'])
+                if not livre.Retour():
+                    query = "update documents set disponible = %s where id = %s"
+                    cusor.execute(query, (livre.disponible, document['id']))
+                    connection.commit()
+                    print("Documents retourner avec succes")
+
+                    sql = "update emprunts set etat = %s where id_adherent = %s and id_document = %s and date_prevu = %s"
+                    cusor.execute(sql, ('retourner', adherent['id'], document['id'],  date_prevu))
+                    connection.commit()
+                     
+
                     
-                if resultat:
-                    membre_trouvee.listeEmprunts.remove(document_trouvee)
-                    print("Le document a ete retourner avec succès.")     
+                    
+
+
+            if document['type'] == 'magazine':
+                magazine = Magazine(document['titre'], document['auteur'], document['date_publication'], document['genre'], document['type'])
+                if not magazine.Retour():
+
+                    query = "update documents set disponible = %s where id = %s"
+                    cusor.execute(query, (magazine.disponible, document['id']))
+                    connection.commit()
+                    print("Documents retourner avec succes")
+        except Exception as e:
+            print("Erreur lors du retour:", e)
+
+        finally:
+            cusor.close()
+            connection.close()
+
+
+                
+
+        
+
+     

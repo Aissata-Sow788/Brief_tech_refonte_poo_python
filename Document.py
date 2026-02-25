@@ -1,10 +1,11 @@
 from abc import ABC ,abstractmethod
 
 class Document(ABC):
-    def __init__(self, titre, auteur, date_publication, disponible=True):
+    def __init__(self, titre, auteur, date_publication,type, disponible=True):
         self.titre = titre
         self.auteur = auteur
         self.date_publication = date_publication
+        self.type=type
         self.__disponible = disponible
 
       

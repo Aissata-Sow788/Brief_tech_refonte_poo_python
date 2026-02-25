@@ -1,5 +1,8 @@
 from Bibliothecaire import Bibliothecaire
 from datetime import datetime
+from Livre import Livre
+from Magazine import Magazine
+from Adherent import Adherant
 
 class Menu:
     def __init__(self):
@@ -9,8 +12,8 @@ class Menu:
 
         while True:
             print("\n", "-" * 10, "BIBLIOTHEQUE", "-" * 10)
-            print("1: Ajouter livre \n" \
-            "2: Ajouter Magazine \n"\
+            print("1: Ajouter livres\n" \
+            "2: Ajouter magazine\n"\
             "3: Afficher documents \n" \
             "4: Inscrire membres \n" \
             "5: Afficher membres \n" \
@@ -42,8 +45,12 @@ class Menu:
                         genre = input("genre : ").strip().lower()
                         if not genre.replace(" ", "").replace("'", "").isalpha():
                             raise ValueError("Genre doit etre une chaine de caractere")
+                                                
+                        type = input("type : ").strip().lower()
+                        if not type.replace(" ", "").replace("'", "").isalpha():
+                            raise ValueError("type doit etre une chaine de caractere")
                         
-                        self.bibliotheque.ajouter_livre(titre, auteur,date_publication, genre)
+                        self.bibliotheque.ajouter_document(Livre(titre, auteur,date_publication, genre, type))
                     except ValueError as e:
                         print("ERREUR: ",e)
                 case "2": 
@@ -64,11 +71,13 @@ class Menu:
                         except ValueError:
                             raise ValueError("Format invalide ! Utilise YYYY-MM-DD")
                         
-                        periodiciter = input("periodiciter : ").strip().lower()
-                        if not periodiciter.replace(" ", "").replace("'", "").isalnum():
-                            raise ValueError("periodiciter doit etre une chaine de caractere")
+                        genre = input("genre : ")
+                           
+                        type = input("type : ").strip().lower()
+                        if not type.replace(" ", "").replace("'", "").isalpha():
+                            raise ValueError("type doit etre une chaine de caractere")
                         
-                        self.bibliotheque.ajouter_magazine(titre, auteur, date_publication, periodiciter)
+                        self.bibliotheque.ajouter_document(Magazine(titre, auteur,date_publication, genre, type))
                     except ValueError as e:
                         print("ERREUR: ",e)
                     
@@ -77,10 +86,14 @@ class Menu:
 
                 case '4':
                     try:
+                        prenom = input("prenom : ").strip()
+                        if not prenom.replace(" ", "").isalpha():
+                            raise ValueError('prenom invalide')
+                        
                         nom = input("Nom : ").strip()
                         if not nom.replace(" ", "").isalpha():
                             raise ValueError('NOm invalide')
-                        self.bibliotheque.InscrireMembre(nom)
+                        self.bibliotheque.InscrireMembre(Adherant(nom, prenom))
                     except ValueError as e:
                         print("Erreur : ", e)
 
@@ -92,21 +105,30 @@ class Menu:
                     self.bibliotheque.Lister_membres()
                     try:
                         
-                        nom_membre=input("Nom: ").strip().lower()
+                        id_adherent=input("id_adherent: ").strip()
 
-                        if not nom_membre.replace(" ", "").isalpha():
+                        if not id_adherent.replace(" ", "").isnumeric():
 
-                            raise ValueError("le nnom doit etre une chaine de caractere")
+                            raise ValueError("Vous devez saisir un numero")
                     except ValueError as e:
                         print("Erreur : ", e)
-                    
+
+                    print('------------------Liste des documents-------------------')
                     self.bibliotheque.Lister_document()
                     try:
-                        titre_livre=input("Titre: ").strip().lower()
-                        if not titre_livre.replace(" ", "").replace("'", "").isalpha():
-                            raise ValueError("le titre doit etre une chaine de cractere")
+                        id_document=input("id_document: ").strip()
+
+                        if not id_document.replace(" ", "").isnumeric():
+
+                            raise ValueError("Vous devez saisir un numero")
                         
-                        self.bibliotheque.valider_pret(nom_membre,titre_livre)
+                        date_str = input("Entrer la date  prevu (YYYY-MM-DD) : ").strip()
+                        try:
+                            date_prevu = datetime.strptime(date_str, "%Y-%m-%d").date()
+                        except ValueError:
+                            raise ValueError("Format invalide ! Utilise YYYY-MM-DD")
+                        
+                        self.bibliotheque.valider_pret(int(id_adherent), int(id_document), date_prevu)
                     except ValueError as e:
                         print("Erreur : ", e)
 
@@ -114,10 +136,13 @@ class Menu:
                     print('----------------Liste des adherants--------------')
                     self.bibliotheque.Lister_membres()
                     try:
-                        nom=input('Nom: ').strip()
-                        if not nom.replace(" ", "").isalpha():
-                            raise ValueError("le nom doit etre une chaine de caractere")
-                        self.bibliotheque.Lister_Emprunt(nom)
+                        id_adherent=input("id_adherent: ").strip()
+
+                        if not id_adherent.replace(" ", "").isnumeric():
+
+                            raise ValueError("Vous devez saisir un numero")
+                        
+                        self.bibliotheque.Lister_Emprunt(int(id_adherent))
                     except ValueError as e:
                         print("Erreur : ", e)
                 
@@ -127,22 +152,31 @@ class Menu:
                     self.bibliotheque.Lister_membres()
                     try:
                         
-                        nom_membre=input("Nom: ").strip().lower()
+                        id_adherent=input("id_adherent: ").strip()
 
-                        if not nom_membre.replace(" ", "").isalpha():
+                        if not id_adherent.replace(" ", "").isnumeric():
 
-                            raise ValueError("le nnom doit etre une chaine de caractere")
+                            raise ValueError("Vous devez saisir un numero")
                     except ValueError as e:
                         print("Erreur : ", e)
 
-                    print('------------------Liste des livres-------------------')
+                    print('------------------Liste des documents-------------------')
                     self.bibliotheque.Lister_document()
                     try:
-                        titre_livre=input("Titre: ").strip().lower()
-                        if not titre_livre.replace(" ", "").replace("'", "").isalpha():
-                            raise ValueError("le titre doit etre une chaine de cractere")
+                        id_document=input("id_document: ").strip()
+
+                        if not id_document.replace(" ", "").isnumeric():
+
+                            raise ValueError("Vous devez saisir un numero")
                         
-                        self.bibliotheque.Retourner_document(nom_membre,titre_livre)
+                        date_str = input("Entrer la date  prevu (YYYY-MM-DD) : ").strip()
+                        try:
+                            date_prevu = datetime.strptime(date_str, "%Y-%m-%d").date()
+                        except ValueError:
+                            raise ValueError("Format invalide ! Utilise YYYY-MM-DD")
+                        
+                        
+                        self.bibliotheque.Retourner_document(int(id_document), int(id_adherent), date_prevu)
                     except ValueError as e:
                         print("Erreur : ", e)
              

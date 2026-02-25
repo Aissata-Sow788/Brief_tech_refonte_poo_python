@@ -1,8 +1,8 @@
 from Document import Document
 
 class Livre(Document):
-    def __init__(self, titre, auteur, date_publication, genre, disponible=True):
-        super().__init__(titre, auteur, date_publication, disponible)
+    def __init__(self, titre, auteur, date_publication, genre, type, disponible=True):
+        super().__init__(titre, auteur, date_publication, type, disponible)
         self.genre = genre
      
 
@@ -11,8 +11,9 @@ class Livre(Document):
             print("le livre est deja emprunter")
             return False
         else:
-            self.disponible=False
+            self.disponible = False
             return True
+
             
 
     def Retour(self):

@@ -1,9 +1,9 @@
 from Document import Document
 
 class Magazine(Document):
-    def __init__(self, titre, auteur, date_publication, periodiciter, disponible=True):
-        super().__init__(titre, auteur, date_publication, disponible)
-        self.periodiciter = periodiciter
+    def __init__(self, titre, auteur, date_publication, genre, type, disponible=True):
+        super().__init__(titre, auteur, date_publication, type, disponible)
+        self.genre = genre
 
 
     def Emprunt(self):
@@ -30,5 +30,5 @@ class Magazine(Document):
         else:
             dispo = "Emprunté"
             
-        return f"Magazine: {self.titre} - Auteur: {self.auteur} - Genre : {self.periodiciter} - Statut:[{dispo}]"
+        return f"Magazine: {self.titre} - Auteur: {self.auteur} - Statut:[{dispo}]"
     
