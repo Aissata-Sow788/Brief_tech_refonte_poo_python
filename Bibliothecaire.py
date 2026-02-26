@@ -2,6 +2,7 @@ from Livre import Livre
 from Magazine import Magazine
 from Adherent import Adherant
 from bd import get_connection
+import bcrypt
 
 class Bibliothecaire:
     def __init__(self):
@@ -206,10 +207,6 @@ class Bibliothecaire:
                     connection.commit()
                      
 
-                    
-                    
-
-
             if document['type'] == 'magazine':
                 magazine = Magazine(document['titre'], document['auteur'], document['date_publication'], document['genre'], document['type'])
                 if not magazine.Retour():
@@ -224,6 +221,62 @@ class Bibliothecaire:
         finally:
             cusor.close()
             connection.close()
+
+    @staticmethod
+    def inscription(utilisateurs):
+        try:
+            connection = get_connection()
+            cursor = connection.cursor()
+
+            query = "insert into utilisateurs (nom, prenom, email, mdp) values (%s,%s,%s,%s)"
+            cursor.execute(query, (utilisateurs.nom, utilisateurs.prenom, utilisateurs.email, utilisateurs.mdp))
+            connection.commit()
+            print("Utilisateur ajouter avec succes")
+
+        except Exception as e:
+            print("Erreur lors de l'ajout de l'utilisteur :", e)
+
+        finally:
+            cursor.close()
+            connection.close()
+
+    @staticmethod
+    def rechercher_user( email):
+
+        try:
+            connection = get_connection()
+            cursor = connection.cursor(dictionary=True)
+
+            query = "select * from utilisateurs where email = %s "
+            cursor.execute(query, (email,))
+            return cursor.fetchone()
+        
+        except Exception as e:
+            print("Erreur lors de la recherche :", e)
+
+        finally:
+            cursor.close()
+            connection.close()
+
+    
+    def se_connecter(self, email, mdp):
+
+        user = self.rechercher_user(email)
+
+        if user is None:
+            print("Email invalide")
+            return False
+        else:
+            mdp_hasher = user["mdp"]
+            if bcrypt.checkpw(mdp.encode("utf-8"),mdp_hasher.encode("utf-8")):
+                return True
+            
+            
+
+
+
+
+
 
 
                 

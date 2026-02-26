@@ -4,6 +4,7 @@ from Livre import Livre
 from Magazine import Magazine
 from Adherent import Adherant
 
+
 class Menu:
     def __init__(self):
         self.bibliotheque = Bibliothecaire()
@@ -19,7 +20,7 @@ class Menu:
             "5: Afficher membres \n" \
             "6: Valider pret \n" \
             "7: Afficher les emprunts d'un adherant \n" \
-            "8: Retourner un document\n"
+            "8: Retourner un document\n"\
             "0: Quitter")
 
             choix = input("\nEntrez votre choix : ")
@@ -179,8 +180,7 @@ class Menu:
                         self.bibliotheque.Retourner_document(int(id_document), int(id_adherent), date_prevu)
                     except ValueError as e:
                         print("Erreur : ", e)
-             
-                        
+
                 case '0':
                     print("BYE")
                     break  
